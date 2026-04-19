@@ -1,118 +1,120 @@
 # SlackMenuBadge
 
-`SlackMenuBadge` 是一个轻量级 macOS Menu Bar 工具，用来把 Slack 的未读状态同步到系统右上角菜单栏。
+[中文文档](./README.zh-CN.md)
 
-它不修改 Slack 本身，而是读取 Slack 已经显示在 Dock 上的未读 badge，再把状态映射到 Menu Bar。目标就是补上 Slack 官方客户端在 macOS 上缺失的“菜单栏未读提醒”这一层体验。
+`SlackMenuBadge` is a lightweight macOS menu bar app that mirrors Slack unread status into the system status bar.
 
-## 功能
+It does not modify Slack itself. Instead, it reads the unread badge that Slack already shows in the Dock and projects that state into the macOS menu bar. The goal is simple: bring back the missing "menu bar unread indicator" experience that Slack's macOS client does not provide.
 
-- 在 macOS 右上角 Menu Bar 显示 Slack 状态。
-- 实时轮询 Slack 的 Dock 未读 badge。
-- 有未读消息时显示数字。
-- 没有未读消息时只显示 Slack 图标，不显示数字。
-- Slack 未运行时仍保留菜单栏入口。
-- 权限未就绪时显示 `?`，并提供打开系统设置的入口。
+## What It Does
 
-当前实现的行为接近微信的菜单栏提醒逻辑，但实现方式更轻量。
+- Shows Slack status in the macOS menu bar.
+- Polls Slack's Dock unread badge in real time.
+- Displays the unread count when there are unread messages.
+- Hides the count when unread is `0`.
+- Keeps a menu bar entry even when Slack is not running.
+- Shows `?` when required permissions are missing and provides a shortcut to System Settings.
 
-## 工作原理
+The behavior is intentionally close to the way WeChat handles menu bar unread status on macOS, but implemented as a separate lightweight utility.
 
-Slack 官方 macOS 客户端没有提供一个稳定的本地接口给第三方读取未读数。
+## How It Works
 
-这个项目当前采用的方案是：
+Slack does not expose a stable local API for third-party apps to read unread counts from the macOS client.
 
-1. 确认 Slack 是否正在运行。
-2. 通过 macOS Accessibility 访问 `Dock` 进程的 UI 元素。
-3. 找到 Slack 在 Dock 中对应的图标。
-4. 读取 Dock item 的 `AXStatusLabel`。
-5. 将这个值显示到 Menu Bar。
+This project currently uses the following approach:
 
-这意味着它依赖：
+1. Detect whether Slack is running.
+2. Use macOS Accessibility access to inspect the `Dock` process UI hierarchy.
+3. Locate Slack's Dock item.
+4. Read the item's `AXStatusLabel`.
+5. Render that value in the menu bar.
 
-- macOS 的 `Accessibility` 权限
-- 当前版本 Slack 在 Dock 上的 badge 表现
-- 当前版本 macOS 的 Dock 可访问性结构
+That means the app depends on:
 
-这不是 Slack 官方 API 级别的稳定集成，但对个人桌面工具来说是一个足够轻、足够直接的工程方案。
+- macOS `Accessibility` permission
+- Slack's current Dock badge behavior
+- The current Dock accessibility hierarchy on macOS
 
-## 效果说明
+This is not an official Slack API integration, but it is a lightweight and practical engineering solution for a personal desktop utility.
 
-- 有未读：菜单栏显示 `Slack 图标 + 数字`
-- 无未读：菜单栏只显示 `Slack 图标`
-- 无权限：菜单栏显示 `Slack 图标 + ?`
-- Slack 未启动：菜单栏只显示 `Slack 图标`
+## Status Behavior
 
-## 系统要求
+- Unread messages: shows `Slack icon + count`
+- No unread messages: shows `Slack icon` only
+- Missing permission: shows `Slack icon + ?`
+- Slack not running: shows `Slack icon` only
 
-- macOS 13 或更高版本
+## Requirements
+
+- macOS 13 or later
 - Swift 6 toolchain
-- 已安装 Slack for macOS
+- Slack for macOS installed
 
-## 快速开始
+## Quick Start
 
-### 1. 直接运行
+### Run directly
 
 ```bash
 swift run SlackMenuBadge
 ```
 
-### 2. 打包成 `.app`
+### Package as a `.app`
 
 ```bash
 ./scripts/package_app.sh
 ```
 
-默认会生成：
+By default this generates:
 
 ```text
 ~/Downloads/SlackMenuBadge.app
 ```
 
-## 如何使用
+## Usage
 
-### 首次运行
+### First launch
 
-1. 启动 Slack。
-2. 启动 `SlackMenuBadge`。
-3. 观察菜单栏是否出现 Slack 图标。
+1. Start Slack.
+2. Start `SlackMenuBadge`.
+3. Confirm that the Slack icon appears in the menu bar.
 
-### 菜单项
+### Menu items
 
-应用当前提供这些菜单项：
+The app currently exposes:
 
 - `Refresh Now`
 - `Open Slack`
 - `Accessibility Setup`
 - `Quit SlackMenuBadge`
 
-## 权限设置
+## Permissions
 
-这个工具必须拿到 `Accessibility` 权限，否则无法读取 Dock 上 Slack 的未读 badge。
+This app requires `Accessibility` permission to read Slack's unread badge from the Dock.
 
-### 授权步骤
+### Granting permission
 
-1. 打开 `System Settings`
-2. 进入 `Privacy & Security`
-3. 打开 `Accessibility`
-4. 给 `SlackMenuBadge` 打开权限
-5. 完全退出 `SlackMenuBadge`
-6. 重新启动 `SlackMenuBadge`
+1. Open `System Settings`
+2. Go to `Privacy & Security`
+3. Open `Accessibility`
+4. Enable `SlackMenuBadge`
+5. Fully quit `SlackMenuBadge`
+6. Launch `SlackMenuBadge` again
 
-### 权限是否生效的判断
+### How to tell whether permission is active
 
-- 如果菜单栏显示数字，说明权限已生效
-- 如果菜单栏显示 `?`，通常说明权限还没真正对当前进程生效
+- If the menu bar shows a number, permission is active
+- If the menu bar shows `?`, permission usually has not taken effect for the current process yet
 
-### 常见问题
+### Common permission issue
 
-如果你已经勾选了权限，但还是显示 `?`，通常按下面顺序处理即可：
+If the app is already enabled in `Accessibility` but still shows `?`, this usually fixes it:
 
-1. 退出 `SlackMenuBadge`
-2. 在 `Accessibility` 设置里关闭再重新打开权限
-3. 重新启动 `SlackMenuBadge`
-4. 还不行的话，把 `SlackMenuBadge` 从权限列表里移除，再重新打开 app 让系统重新授权
+1. Quit `SlackMenuBadge`
+2. Toggle its permission off and on again in `Accessibility`
+3. Relaunch `SlackMenuBadge`
+4. If needed, remove it from the list entirely and relaunch the app so macOS prompts again
 
-## 项目结构
+## Project Structure
 
 ```text
 .
@@ -127,115 +129,116 @@ swift run SlackMenuBadge
 ├── Sources/
 │   └── main.swift
 ├── Package.swift
-└── README.md
+├── README.md
+└── README.zh-CN.md
 ```
 
-## 开发说明
+## Development
 
-### 本地开发
-
-直接运行：
+### Local development
 
 ```bash
 swift run
 ```
 
-或显式执行：
+or explicitly:
 
 ```bash
 swift run SlackMenuBadge
 ```
 
-### 构建
+### Build
 
 ```bash
 swift build
 ```
 
-### 发布包
+### Package
 
 ```bash
 ./scripts/package_app.sh
 ```
 
-### 核心代码位置
+### Key files
 
-- 菜单栏应用入口：`Sources/main.swift`
-- 未读读取逻辑：`SlackUnreadProvider`
-- app 打包脚本：`scripts/package_app.sh`
-- app Finder 图标：`AppResources/AppIcon.svg`
-- 菜单栏图标资源：`AppResources/slack-icon.png`
+- Menu bar app entry point: `Sources/main.swift`
+- Unread badge provider: `SlackUnreadProvider`
+- App packaging script: `scripts/package_app.sh`
+- Finder app icon source: `AppResources/AppIcon.svg`
+- Menu bar icon asset: `AppResources/slack-icon.png`
 
-## 如何继续开发
+## How To Continue Developing
 
-如果你要继续迭代这个项目，建议按下面几个方向扩展。
+If you want to keep iterating on the project, these are the most useful next steps.
 
-### 1. 提升未读读取稳定性
+### 1. Improve unread detection robustness
 
-当前方案依赖 AppleScript + `System Events` + Dock UI 层级。
+The current implementation depends on AppleScript, `System Events`, and the Dock UI hierarchy.
 
-可继续优化的方向：
+Possible improvements:
 
-- 改成更细的 AX API 检测，减少对 AppleScript 文本返回的依赖
-- 区分“权限缺失”和“Dock 数据暂时不可用”
-- 增加 Slack 进程名、bundle id、窗口状态的兼容判断
+- Use lower-level AX APIs instead of relying as much on AppleScript string output
+- Distinguish between "permission missing" and "Dock data temporarily unavailable"
+- Add compatibility handling for Slack process names, bundle IDs, and runtime states
 
-### 2. 增强权限引导
+### 2. Improve permission onboarding
 
-目前权限处理已经可用，但仍偏工程化。
+Permission handling works, but it is still fairly technical.
 
-可以继续做：
+Possible improvements:
 
-- 启动时主动检测权限状态
-- 在无权限时弹出更明确的引导
-- 在授权后自动提示用户重启应用
+- Detect permission state proactively on launch
+- Show clearer guidance when permission is missing
+- Prompt the user to restart the app after authorization changes
 
-### 3. 优化菜单栏 UI
+### 3. Refine the menu bar UI
 
-当前 UI 已经满足核心需求，但还可以继续打磨：
+The current UI is functional, but can still be polished:
 
-- 更像微信的红点 / 徽标表现
-- 图标和数字间距进一步微调
-- 更丰富的 tooltip 和状态文案
+- Make the unread presentation look more like a native badge or WeChat-style status item
+- Fine-tune spacing between icon and count
+- Improve tooltip and state copy
 
-### 4. 增加开机自启动
+### 4. Add launch at login
 
-这是最自然的下一步能力。可以考虑：
+This is the most natural next feature.
 
-- 使用 `SMAppService`
-- 增加菜单项控制开机启动开关
+Potential direction:
 
-### 5. 提供更规范的安装方式
+- Use `SMAppService`
+- Add a menu option to toggle launch at login
 
-当前是脚本打包模式。后续可以考虑：
+### 5. Provide a cleaner installation path
 
-- 生成可分发的 Release 包
-- 签名与公证
-- Homebrew Cask 或安装脚本
+The current distribution flow is script-based packaging. Later you may want:
 
-## 已知限制
+- Release artifacts
+- Proper signing and notarization
+- A Homebrew Cask or installer script
 
-- 强依赖 `Accessibility` 权限
-- 强依赖 Slack 当前的 Dock badge 实现
-- 如果 Slack 或 macOS 改了相关 UI 结构，可能需要适配
-- 当前轮询间隔是 5 秒，不是事件驱动
-- 当前默认只支持标准 Slack macOS 客户端
+## Known Limitations
 
-## 图标与资源
+- Strongly depends on `Accessibility` permission
+- Strongly depends on Slack's current Dock badge implementation
+- May require updates if Slack or macOS changes the relevant UI structure
+- Uses a 5-second polling interval rather than an event-driven model
+- Currently targets the standard Slack macOS desktop client
 
-- 菜单栏图标基于 Slack 图形资源制作
-- Finder app 图标改为仓库内的黑白 SVG 版本，并在打包时转换为 `icns`
+## Icons And Assets
 
-参考入口：
+- The menu bar icon is derived from Slack visual assets
+- The Finder app icon is a monochrome SVG variant stored in the repo and converted to `icns` during packaging
+
+Reference:
 
 - [Slack Media Kit](https://slack.com/media-kit)
 
-## 后续建议
+## Recommended Next Steps
 
-如果你准备把这个项目长期维护下去，推荐下一步优先做：
+If you plan to maintain this project over time, the highest-value next items are:
 
-1. 开机自启动
-2. 更稳的权限检测
-3. 原生 AX API 替换部分 AppleScript
-4. 正式签名和公证
+1. Launch at login
+2. More reliable permission detection
+3. Replacing part of the AppleScript layer with native AX APIs
+4. Proper signing and notarization
 
