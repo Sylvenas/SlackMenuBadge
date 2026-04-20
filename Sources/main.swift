@@ -34,14 +34,6 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
     private func configureMenu() {
         let menu = NSMenu()
 
-        let refreshItem = NSMenuItem(
-            title: "Refresh Now",
-            action: #selector(handleRefresh),
-            keyEquivalent: "r"
-        )
-        refreshItem.target = self
-        menu.addItem(refreshItem)
-
         let openSlackItem = NSMenuItem(
             title: "Open Slack",
             action: #selector(handleOpenSlack),
@@ -49,6 +41,14 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
         )
         openSlackItem.target = self
         menu.addItem(openSlackItem)
+
+        let refreshItem = NSMenuItem(
+            title: "Refresh Now",
+            action: #selector(handleRefresh),
+            keyEquivalent: "r"
+        )
+        refreshItem.target = self
+        menu.addItem(refreshItem)
 
         let permissionItem = NSMenuItem(
             title: "Accessibility Setup",
@@ -167,8 +167,8 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
         guard let menu = statusItem.menu else { return }
         if menu.items.count < 5 { return }
 
-        let refreshItem = menu.items[0]
-        let openSlackItem = menu.items[1]
+        let openSlackItem = menu.items[0]
+        let refreshItem = menu.items[1]
         let permissionItem = menu.items[2]
 
         switch result {
