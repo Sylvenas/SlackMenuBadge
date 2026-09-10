@@ -20,7 +20,9 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
         statusItem.button?.imageHugsTitle = true
         statusItem.button?.title = ""
 
-        configureMenu()
+        statusItem.button?.target = self
+        statusItem.button?.action = #selector(handleOpenSlack)
+
         loadStatusIcon()
         refreshStatus()
 
@@ -31,50 +33,9 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func configureMenu() {
-        let menu = NSMenu()
-
-        let openSlackItem = NSMenuItem(
-            title: "Open Slack",
-            action: #selector(handleOpenSlack),
-            keyEquivalent: "o"
-        )
-        openSlackItem.target = self
-        menu.addItem(openSlackItem)
-
-        let refreshItem = NSMenuItem(
-            title: "Refresh Now",
-            action: #selector(handleRefresh),
-            keyEquivalent: "r"
-        )
-        refreshItem.target = self
-        menu.addItem(refreshItem)
-
-        let permissionItem = NSMenuItem(
-            title: "Accessibility Setup",
-            action: #selector(handleOpenAccessibilitySettings),
-            keyEquivalent: ","
-        )
-        permissionItem.target = self
-        menu.addItem(permissionItem)
-
-        menu.addItem(.separator())
-
-        let quitItem = NSMenuItem(
-            title: "Quit SlackMenuBadge",
-            action: #selector(handleQuit),
-            keyEquivalent: "q"
-        )
-        quitItem.target = self
-        menu.addItem(quitItem)
-
-        statusItem.menu = menu
-    }
-
     private func refreshStatus() {
         let result = unreadProvider.fetchUnreadCount()
         updateTitle(with: result)
-        updateMenuHints(for: result)
     }
 
     private func updateTitle(with result: SlackUnreadResult) {
@@ -163,35 +124,6 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
         return image
     }
 
-    private func updateMenuHints(for result: SlackUnreadResult) {
-        guard let menu = statusItem.menu else { return }
-        if menu.items.count < 5 { return }
-
-        let openSlackItem = menu.items[0]
-        let refreshItem = menu.items[1]
-        let permissionItem = menu.items[2]
-
-        switch result {
-        case .count(let unreadCount):
-            refreshItem.title = unreadCount > 0 ? "Refresh Now (\(unreadCount))" : "Refresh Now"
-            openSlackItem.isHidden = false
-            permissionItem.isHidden = true
-        case .permissionRequired:
-            refreshItem.title = "Refresh Now"
-            openSlackItem.isHidden = false
-            permissionItem.isHidden = false
-        case .slackNotRunning, .unavailable:
-            refreshItem.title = "Refresh Now"
-            openSlackItem.isHidden = false
-            permissionItem.isHidden = true
-        }
-    }
-
-    @objc
-    private func handleRefresh() {
-        refreshStatus()
-    }
-
     @objc
     private func handleOpenSlack() {
         NSWorkspace.shared.openApplication(
@@ -199,19 +131,6 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
             configuration: NSWorkspace.OpenConfiguration(),
             completionHandler: nil
         )
-    }
-
-    @objc
-    private func handleOpenAccessibilitySettings() {
-        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else {
-            return
-        }
-        NSWorkspace.shared.open(url)
-    }
-
-    @objc
-    private func handleQuit() {
-        NSApplication.shared.terminate(nil)
     }
 }
 

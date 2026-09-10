@@ -78,14 +78,13 @@ swift run SlackMenuBadge
 2. 启动 `SlackMenuBadge`。
 3. 观察菜单栏是否出现 Slack 图标。
 
-### 菜单项
+### 点击行为
 
-应用当前提供这些菜单项：
+菜单栏图标没有下拉菜单，点一下直接打开 Slack。
 
-- `Refresh Now`
-- `Open Slack`
-- `Accessibility Setup`
-- `Quit SlackMenuBadge`
+未读数每 5 秒自动刷新一次。
+
+需要退出 app 时执行 `pkill SlackMenuBadge`，或在「活动监视器」里结束进程。
 
 ## 权限设置
 

@@ -78,14 +78,13 @@ By default this generates:
 2. Start `SlackMenuBadge`.
 3. Confirm that the Slack icon appears in the menu bar.
 
-### Menu items
+### Click behavior
 
-The app currently exposes:
+The menu bar item has no menu. Clicking the icon opens Slack directly.
 
-- `Refresh Now`
-- `Open Slack`
-- `Accessibility Setup`
-- `Quit SlackMenuBadge`
+The unread count refreshes automatically every 5 seconds.
+
+To quit the app, run `pkill SlackMenuBadge` or quit it from Activity Monitor.
 
 ## Permissions
 
