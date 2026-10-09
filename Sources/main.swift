@@ -10,7 +10,7 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
     private var statusIcon: NSImage?
     private let statusFont = NSFont.monospacedSystemFont(ofSize: 13, weight: .medium)
     private let newMessageSound = NSSound(named: "Glass")
-    private var lastUnreadCount: Int?
+    private var lastBadge: (mentions: Int, hasUnread: Bool)?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let app = NSApplication.shared
@@ -37,16 +37,27 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
 
     private func refreshStatus() {
         let result = unreadProvider.fetchUnreadCount()
-        playSoundIfUnreadIncreased(result)
+        playSoundIfNewMessages(result)
         updateTitle(with: result)
     }
 
-    private func playSoundIfUnreadIncreased(_ result: SlackUnreadResult) {
-        guard case .count(let unreadCount) = result else { return }
-        if let previous = lastUnreadCount, unreadCount > previous {
+    // Rings when mentions/DMs go up, or when unread channel messages first appear (Dock badge "•").
+    private func playSoundIfNewMessages(_ result: SlackUnreadResult) {
+        let badge: (mentions: Int, hasUnread: Bool)
+        switch result {
+        case .count(let unreadCount):
+            badge = (unreadCount, unreadCount > 0)
+        case .unreadDot:
+            badge = (0, true)
+        default:
+            return
+        }
+
+        if let previous = lastBadge,
+           badge.mentions > previous.mentions || (badge.hasUnread && !previous.hasUnread) {
             newMessageSound?.play()
         }
-        lastUnreadCount = unreadCount
+        lastBadge = badge
     }
 
     private func updateTitle(with result: SlackUnreadResult) {
@@ -58,6 +69,9 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
         case .count(let unreadCount):
             button.attributedTitle = makeStatusText(unreadCount > 0 ? "\(unreadCount)" : "")
             button.toolTip = unreadCount > 0 ? "Slack unread: \(unreadCount)" : "Slack: no unread messages"
+        case .unreadDot:
+            button.attributedTitle = makeStatusText("")
+            button.toolTip = "Slack: unread channel messages"
         case .slackNotRunning:
             button.attributedTitle = makeStatusText("")
             button.toolTip = "Slack is not running"
@@ -147,6 +161,7 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
 
 private enum SlackUnreadResult {
     case count(Int)
+    case unreadDot
     case slackNotRunning
     case permissionRequired
     case unavailable
@@ -220,7 +235,8 @@ private struct SlackUnreadProvider {
             return .count(0)
         default:
             let digits = rawValue.filter(\.isNumber)
-            return .count(Int(digits) ?? 0)
+            guard let count = Int(digits) else { return .unreadDot }
+            return .count(count)
         }
     }
 }

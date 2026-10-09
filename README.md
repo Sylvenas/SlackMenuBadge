@@ -12,7 +12,7 @@ It does not modify Slack itself. Instead, it reads the unread badge that Slack a
 - Polls Slack's Dock unread badge in real time.
 - Displays the unread count when there are unread messages.
 - Hides the count when unread is `0`.
-- Plays the macOS `Glass` sound when the unread count goes up.
+- Plays the macOS `Glass` sound when the unread count goes up, or when unread channel messages first appear (Dock badge `•`).
 - Keeps a menu bar entry even when Slack is not running.
 - Shows `?` when required permissions are missing and provides a shortcut to System Settings.
 
