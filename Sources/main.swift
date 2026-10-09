@@ -9,6 +9,8 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
     private var timer: Timer?
     private var statusIcon: NSImage?
     private let statusFont = NSFont.monospacedSystemFont(ofSize: 13, weight: .medium)
+    private let newMessageSound = NSSound(named: "Glass")
+    private var lastUnreadCount: Int?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let app = NSApplication.shared
@@ -35,7 +37,16 @@ final class SlackMenuBadgeApp: NSObject, NSApplicationDelegate {
 
     private func refreshStatus() {
         let result = unreadProvider.fetchUnreadCount()
+        playSoundIfUnreadIncreased(result)
         updateTitle(with: result)
+    }
+
+    private func playSoundIfUnreadIncreased(_ result: SlackUnreadResult) {
+        guard case .count(let unreadCount) = result else { return }
+        if let previous = lastUnreadCount, unreadCount > previous {
+            newMessageSound?.play()
+        }
+        lastUnreadCount = unreadCount
     }
 
     private func updateTitle(with result: SlackUnreadResult) {
